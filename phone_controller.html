@@ -1,0 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Clean Ocean VR - Control Móvil</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a4d68 0%, #088395 100%);
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            max-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .status {
+            font-size: 14px;
+            color: #4ade80;
+        }
+
+        .settings {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .setting-row label {
+            font-size: 14px;
+        }
+
+        .setting-row input {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            width: 180px;
+        }
+
+        .button-connect {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #4ade80;
+            color: #0a4d68;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .button-connect:active {
+            transform: scale(0.95);
+            background: #22c55e;
+        }
+
+        .button-connect.connected {
+            background: #ef4444;
+        }
+
+        .gyro-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .gyro-display h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .gyro-value {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .controls {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-button {
+            min-height: 120px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .control-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .button-grab {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .button-grab:active {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
+        .button-highlight {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .button-highlight:active {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .button-icon {
+            font-size: 48px;
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>� Clean Ocean VR</h1>
+            <div class="status" id="connectionStatus">Desconectado</div>
+        </div>
+
+        <div class="error" id="errorDisplay"></div>
+
+        <div class="settings">
+            <div class="setting-row">
+                <label>IP de Unity:</label>
+                <input type="text" id="unityIP" value="192.168.1.100" placeholder="192.168.1.100">
+            </div>
+            <div class="setting-row">
+                <label>Puerto Gyro:</label>
+                <input type="number" id="gyroPort" value="5006">
+            </div>
+            <button class="button-connect" id="connectButton" onclick="toggleConnection()">
+                CONECTAR
+            </button>
+        </div>
+
+        <div class="gyro-display">
+            <h3> Datos del Giroscopio</h3>
+            <div class="gyro-value">
+                <span>Pitch (X):</span>
+                <span id="gyroX">0.00</span>
+            </div>
+            <div class="gyro-value">
+                <span>Yaw (Y):</span>
+                <span id="gyroY">0.00</span>
+            </div>
+            <div class="gyro-value">
+                <span>Roll (Z):</span>
+                <span id="gyroZ">0.00</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-button button-grab" id="grabButton">
+                <span class="button-icon">✊</span>
+                <span>AGARRAR</span>
+            </button>
+            <button class="control-button button-highlight" id="highlightButton">
+                <span class="button-icon"></span>
+                <span>HIGHLIGHT</span>
+            </button>
+        </div>
+
+        <div class="footer">
+            Clean Ocean VR - Fase 11 (Oct 2025)<br>
+            Sistema Dual: Gestos + Celular
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN Y ESTADO
+        let isConnected = false;
+        let ws = null;
+        let gyroData = { x: 0, y: 0, z: 0 };
+        let grabButtonPressed = false;
+        let highlightButtonPressed = false;
+        let sendInterval = null;
+
+        //  DETECCIÓN AUTOMÁTICA DE IP DEL SERVIDOR
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log(' Detectando IP del servidor automáticamente...');
+            
+            try {
+                // Obtener la IP del servidor que está sirviendo esta página
+                const serverHost = window.location.hostname;
+                const serverPort = window.location.port || '8080';
+                
+                console.log(` Servidor detectado: ${serverHost}:${serverPort}`);
+                
+                // Intentar obtener IP desde la API del servidor
+                const response = await fetch(`http://${serverHost}:${serverPort}/api/ip`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(' IP recibida del servidor:', data);
+                    
+                    // Auto-completar los campos
+                    document.getElementById('unityIP').value = data.ip;
+                    document.getElementById('gyroPort').value = data.gyroPort || 5006;
+                    
+                    document.getElementById('connectionStatus').textContent = ` IP detectada: ${data.ip}`;
+                } else {
+                    // Si no hay API, usar el hostname directamente
+                    document.getElementById('unityIP').value = serverHost;
+                    document.getElementById('connectionStatus').textContent = ` IP del navegador: ${serverHost}`;
+                }
+                
+            } catch (error) {
+                console.error(' Error detectando IP:', error);
+                document.getElementById('connectionStatus').textContent = ' Verifica la IP manualmente';
+            }
+        });
+
+        // CONTROL DE CONEXIÓN
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        function connect() {
+            const ip = document.getElementById('unityIP').value;
+            const port = document.getElementById('gyroPort').value;
+
+            // Iniciar giroscopio
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                // iOS 13+ requiere permiso
+                DeviceMotionEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            startGyroscope();
+                        } else {
+                            showError('Permiso de giroscopio denegado');
+                        }
+                    })
+                    .catch(error => {
+                        showError('Error solicitando permiso: ' + error);
+                    });
+            } else {
+                // Android y navegadores compatibles
+                startGyroscope();
+            }
+
+            // Iniciar envío de datos
+            isConnected = true;
+            document.getElementById('connectButton').textContent = 'DESCONECTAR';
+            document.getElementById('connectButton').classList.add('connected');
+            document.getElementById('connectionStatus').textContent = ' Conectado a ' + ip;
+            
+            // Enviar datos cada 50ms (20 veces por segundo)
+            sendInterval = setInterval(() => sendData(ip, port), 50);
+
+            showError(''); // Limpiar errores
+        }
+
+        function disconnect() {
+            isConnected = false;
+            
+            if (sendInterval) {
+                clearInterval(sendInterval);
+                sendInterval = null;
+            }
+
+            window.removeEventListener('devicemotion', handleGyroData);
+
+            document.getElementById('connectButton').textContent = 'CONECTAR';
+            document.getElementById('connectButton').classList.remove('connected');
+            document.getElementById('connectionStatus').textContent = 'Desconectado';
+        }
+
+        function startGyroscope() {
+            console.log(' Iniciando giroscopio...');
+            
+            // Mostrar mensaje de inicio
+            document.getElementById('connectionStatus').textContent = ' Activando giroscopio... MUEVE EL CELULAR';
+            
+            window.addEventListener('devicemotion', handleGyroData);
+            
+            // Timeout para verificar si el giroscopio responde
+            setTimeout(() => {
+                if (gyroData.x === 0 && gyroData.y === 0 && gyroData.z === 0) {
+                    document.getElementById('connectionStatus').textContent = ' MUEVE EL CELULAR para activar sensores';
+                    showError('El giroscopio no responde. Mueve el dispositivo o verifica permisos en Configuración > Sitios web.');
+                }
+            }, 2000);
+        }
+
+        function handleGyroData(event) {
+            if (event.rotationRate) {
+                // Obtener velocidad angular en rad/s
+                gyroData.x = event.rotationRate.beta || 0;  // Pitch
+                gyroData.y = event.rotationRate.alpha || 0; // Yaw
+                gyroData.z = event.rotationRate.gamma || 0; // Roll
+
+                // Actualizar display
+                document.getElementById('gyroX').textContent = gyroData.x.toFixed(2);
+                document.getElementById('gyroY').textContent = gyroData.y.toFixed(2);
+                document.getElementById('gyroZ').textContent = gyroData.z.toFixed(2);
+                
+                // DEBUG: Cambiar color de fondo si hay movimiento
+                const hasMovement = Math.abs(gyroData.x) > 0.1 || Math.abs(gyroData.y) > 0.1 || Math.abs(gyroData.z) > 0.1;
+                if (hasMovement) {
+                    document.querySelector('.gyro-display').style.background = 'rgba(0, 255, 0, 0.3)'; // Verde si hay datos
+                }
+            } else {
+                // NO HAY DATOS DEL GIROSCOPIO
+                document.getElementById('connectionStatus').textContent = ' Giroscopio no disponible';
+                document.querySelector('.gyro-display').style.background = 'rgba(255, 0, 0, 0.3)'; // Rojo si falla
+            }
+        }
+
+        // ENVÍO DE DATOS A UNITY
+        function sendData(ip, port) {
+            if (!isConnected) return;
+
+            const data = {
+                x: gyroData.x,
+                y: gyroData.y,
+                z: gyroData.z,
+                grabButton: grabButtonPressed,
+                highlightButton: highlightButtonPressed
+            };
+
+            const json = JSON.stringify(data);
+            
+            // DEBUG: Mostrar en consola cada 1 segundo (no cada 50ms para no saturar)
+            if (!window.lastLogTime || Date.now() - window.lastLogTime > 1000) {
+                console.log(' Enviando datos:', data);
+                window.lastLogTime = Date.now();
+            }
+
+
+            try {
+                // Crear un endpoint que reenvíe a UDP
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `http://${ip}:8080/gyro`, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(json);
+            } catch (error) {
+                console.error('Error enviando datos:', error);
+            }
+        }
+
+        // CONTROL DE BOTONES
+        const grabButton = document.getElementById('grabButton');
+        const highlightButton = document.getElementById('highlightButton');
+
+        // Botón de AGARRAR
+        grabButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            grabButtonPressed = true;
+            grabButton.style.opacity = '0.7';
+        });
+
+        grabButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            grabButtonPressed = false;
+            grabButton.style.opacity = '1';
+        });
+
+        // Botón de HIGHLIGHT
+        highlightButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            highlightButtonPressed = true;
+            highlightButton.style.opacity = '0.7';
+        });
+
+        highlightButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            highlightButtonPressed = false;
+            highlightButton.style.opacity = '1';
+        });
+
+        // También soporte para mouse (testing en PC)
+        grabButton.addEventListener('mousedown', () => {
+            grabButtonPressed = true;
+            grabButton.style.opacity = '0.7';
+        });
+
+        grabButton.addEventListener('mouseup', () => {
+            grabButtonPressed = false;
+            grabButton.style.opacity = '1';
+        });
+
+        highlightButton.addEventListener('mousedown', () => {
+            highlightButtonPressed = true;
+            highlightButton.style.opacity = '0.7';
+        });
+
+        highlightButton.addEventListener('mouseup', () => {
+            highlightButtonPressed = false;
+            highlightButton.style.opacity = '1';
+        });
+
+        // MANEJO DE ERRORES
+        function showError(message) {
+            const errorDisplay = document.getElementById('errorDisplay');
+            if (message) {
+                errorDisplay.textContent = ' ' + message;
+                errorDisplay.style.display = 'block';
+            } else {
+                errorDisplay.style.display = 'none';
+            }
+        }
+
+        // PREVENIR SCROLL Y ZOOM
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Prevenir zoom con pinch
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

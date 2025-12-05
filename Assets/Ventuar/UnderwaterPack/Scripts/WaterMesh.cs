@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEditor;
+//using UnityEditor;
 using System.Runtime.ExceptionServices;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.EditorTools;
+#endif
 
 namespace LowPolyUnderwaterPack
 {

@@ -1,0 +1,472 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Clean Ocean VR - Control Móvil (Botones)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a4d68 0%, #088395 100%);
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            color: #88d4f7;
+        }
+
+        .header .status {
+            font-size: 18px;
+            margin-top: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .status.connected {
+            background: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+
+        .status.disconnected {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .settings {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .setting-row label {
+            font-size: 16px;
+        }
+
+        .setting-row input {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            width: 180px;
+            text-align: center;
+        }
+
+        .button-connect {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #0a4d68;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+        }
+
+        .button-connect:active {
+            transform: scale(0.95);
+        }
+
+        .button-connect.connected {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .controls {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-button {
+            min-height: 200px;
+            border: none;
+            border-radius: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .control-button:active {
+            transform: scale(0.92);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-button.pressed {
+            transform: scale(0.92);
+            filter: brightness(0.8);
+        }
+
+        .button-grab {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .button-highlight {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .button-icon {
+            font-size: 72px;
+        }
+
+        .button-label {
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .button-hint {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: normal;
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.9);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        /* Indicador de datos enviados */
+        .send-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .send-indicator.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="send-indicator" id="sendIndicator"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>� Clean Ocean VR</h1>
+            <div class="subtitle">Control por Celular - Solo Botones</div>
+            <div class="status disconnected" id="connectionStatus"> Desconectado</div>
+        </div>
+
+        <div class="error" id="errorDisplay"></div>
+
+        <div class="settings">
+            <div class="setting-row">
+                <label>IP del Servidor:</label>
+                <input type="text" id="serverIP" value="192.168.1.100" placeholder="192.168.1.x">
+            </div>
+            <button class="button-connect" id="connectButton" onclick="toggleConnection()">
+                 CONECTAR
+            </button>
+        </div>
+
+        <div class="controls">
+            <button class="control-button button-grab" id="grabButton">
+                <span class="button-icon">✊</span>
+                <span class="button-label">Agarrar</span>
+                <span class="button-hint">Recoger basura cercana</span>
+            </button>
+            <button class="control-button button-highlight" id="highlightButton">
+                <span class="button-icon"></span>
+                <span class="button-label">Highlight</span>
+                <span class="button-hint">Iluminar toda la basura</span>
+            </button>
+        </div>
+
+        <div class="footer">
+             Clean Ocean VR - Multijugador<br>
+            � Noviembre 2025 |  Jugador 1 (Limpiador)
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN Y ESTADO
+        let isConnected = false;
+        let grabButtonPressed = false;
+        let highlightButtonPressed = false;
+        let sendInterval = null;
+
+        // DETECCIÓN AUTOMÁTICA DE IP
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log(' Detectando IP del servidor...');
+            
+            try {
+                const serverHost = window.location.hostname;
+                const serverPort = window.location.port || '8080';
+                
+                console.log(` Servidor: ${serverHost}:${serverPort}`);
+                
+                // Intentar obtener IP desde la API
+                const response = await fetch(`http://${serverHost}:${serverPort}/api/ip`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('serverIP').value = data.ip;
+                    updateStatus(' IP detectada: ' + data.ip, true);
+                } else {
+                    document.getElementById('serverIP').value = serverHost;
+                    updateStatus(' Verifica la IP', false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                updateStatus(' Ingresa la IP manualmente', false);
+            }
+        });
+
+        // CONEXIÓN
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        function connect() {
+            const ip = document.getElementById('serverIP').value;
+            
+            if (!ip) {
+                showError('Ingresa la IP del servidor');
+                return;
+            }
+
+            isConnected = true;
+            document.getElementById('connectButton').textContent = ' DESCONECTAR';
+            document.getElementById('connectButton').classList.add('connected');
+            updateStatus(' Conectado a ' + ip, true);
+            
+            // Enviar datos cada 100ms (10 veces por segundo - suficiente para botones)
+            sendInterval = setInterval(() => sendData(ip), 100);
+            
+            showError('');
+            console.log(' Conectado a', ip);
+        }
+
+        function disconnect() {
+            isConnected = false;
+            
+            if (sendInterval) {
+                clearInterval(sendInterval);
+                sendInterval = null;
+            }
+
+            document.getElementById('connectButton').textContent = ' CONECTAR';
+            document.getElementById('connectButton').classList.remove('connected');
+            updateStatus(' Desconectado', false);
+            
+            console.log(' Desconectado');
+        }
+
+        function updateStatus(text, connected) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = text;
+            status.className = 'status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        // ENVÍO DE DATOS
+        function sendData(ip) {
+            if (!isConnected) return;
+
+            const data = {
+                x: 0,  // Sin giroscopio
+                y: 0,
+                z: 0,
+                grabButton: grabButtonPressed,
+                highlightButton: highlightButtonPressed
+            };
+
+            // Mostrar indicador
+            const indicator = document.getElementById('sendIndicator');
+            indicator.classList.add('active');
+            setTimeout(() => indicator.classList.remove('active'), 50);
+
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `http://${ip}:8080/gyro`, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.timeout = 1000;
+                xhr.send(JSON.stringify(data));
+            } catch (error) {
+                console.error('Error enviando:', error);
+            }
+        }
+
+        // CONTROL DE BOTONES
+        const grabButton = document.getElementById('grabButton');
+        const highlightButton = document.getElementById('highlightButton');
+
+        // BOTÓN GRAB 
+        // Touch events
+        grabButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            grabButtonPressed = true;
+            grabButton.classList.add('pressed');
+            console.log('✊ Grab: PRESS');
+        });
+
+        grabButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            grabButtonPressed = false;
+            grabButton.classList.remove('pressed');
+            console.log('✊ Grab: RELEASE');
+        });
+
+        grabButton.addEventListener('touchcancel', (e) => {
+            grabButtonPressed = false;
+            grabButton.classList.remove('pressed');
+        });
+
+        // Mouse events (para testing en PC)
+        grabButton.addEventListener('mousedown', () => {
+            grabButtonPressed = true;
+            grabButton.classList.add('pressed');
+        });
+
+        grabButton.addEventListener('mouseup', () => {
+            grabButtonPressed = false;
+            grabButton.classList.remove('pressed');
+        });
+
+        grabButton.addEventListener('mouseleave', () => {
+            grabButtonPressed = false;
+            grabButton.classList.remove('pressed');
+        });
+
+        // BOTÓN HIGHLIGHT
+        // Touch events
+        highlightButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            highlightButtonPressed = true;
+            highlightButton.classList.add('pressed');
+            console.log(' Highlight: PRESS');
+        });
+
+        highlightButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            highlightButtonPressed = false;
+            highlightButton.classList.remove('pressed');
+            console.log(' Highlight: RELEASE');
+        });
+
+        highlightButton.addEventListener('touchcancel', (e) => {
+            highlightButtonPressed = false;
+            highlightButton.classList.remove('pressed');
+        });
+
+        // Mouse events (para testing en PC)
+        highlightButton.addEventListener('mousedown', () => {
+            highlightButtonPressed = true;
+            highlightButton.classList.add('pressed');
+        });
+
+        highlightButton.addEventListener('mouseup', () => {
+            highlightButtonPressed = false;
+            highlightButton.classList.remove('pressed');
+        });
+
+        highlightButton.addEventListener('mouseleave', () => {
+            highlightButtonPressed = false;
+            highlightButton.classList.remove('pressed');
+        });
+
+        // MANEJO DE ERRORES
+        function showError(message) {
+            const errorDisplay = document.getElementById('errorDisplay');
+            if (message) {
+                errorDisplay.textContent = ' ' + message;
+                errorDisplay.style.display = 'block';
+            } else {
+                errorDisplay.style.display = 'none';
+            }
+        }
+
+        // PREVENIR SCROLL Y ZOOM
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+        });
+
+        // Prevenir context menu en botones
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

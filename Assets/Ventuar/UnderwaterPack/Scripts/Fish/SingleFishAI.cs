@@ -1,8 +1,13 @@
 using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using System.Collections.Generic;
 using System;
+//using UnityEditor.EditorTools;
+#if UNITY_EDITOR
+using UnityEditor;
 using UnityEditor.EditorTools;
+#endif
+
 
 namespace LowPolyUnderwaterPack
 {

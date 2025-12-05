@@ -1,0 +1,20 @@
+[
+  {
+    "MountId": "56e62dd7-241f-41e9-8c6b-dd4ca4513e62",
+    "AncestorCsetIds": [
+      2
+    ],
+    "SourceCsetId": 3,
+    "DestinationCsetId": 2,
+    "FileConflicts": [
+      {
+        "Path": "/Assets/Ventuar/UnderwaterPack/Scenes/Demo.unity",
+        "ItemId": 4662,
+        "ParentItemId": 4260,
+        "BaseRevId": 2308,
+        "SourceRevId": 5373,
+        "DestinationRevId": 2308
+      }
+    ]
+  }
+]

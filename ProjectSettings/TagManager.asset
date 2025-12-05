@@ -8,10 +8,10 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - UIInteractable
   - Water
   - UI
-  - 
+  - Invisible_jugador
   - 
   - 
   - 
